@@ -13,10 +13,20 @@ import { Textarea } from "../ui/textarea"
 import { Input } from "../ui/input"
 import { Select } from "../ui/select"
 
+import React,{useState} from "react"
+
 export default function GeneratePostForm({setTweets}){
+
+    const [loading,setLoading]= useState(false);
+
+    const[open,setOpen]= useState(false)
 
     const handleSubmit = async(e) =>{
         e.preventDefault()
+
+    try{
+
+    setLoading(true)
 
     const response= await fetch("https://whqkgfxwijcjecxgkpan.supabase.co/functions/v1/generate-tweets",
       {
@@ -36,9 +46,17 @@ export default function GeneratePostForm({setTweets}){
     const dummyTweets = await response.json();
 
     setTweets(dummyTweets.tweets)
+    setOpen(false)
+
+  }catch(error){
+    console.log(error)
+  } finally{
+    setLoading(false)
+
+  }
     }
     return(
-    <Dialog className= "bg-black text-white">
+    <Dialog open={open} onOpenChange={setOpen} className= "bg-black text-white">
   <DialogTrigger className="bg-white text-black rounded-md p-1">+ Generate Posts</DialogTrigger>
   <DialogContent className="bg-black text-white flex flex-col gap-4">
     <DialogHeader>
@@ -64,8 +82,8 @@ export default function GeneratePostForm({setTweets}){
             <Input className="bg-white text-black" id="tone"/>
         </div>
 
-        <Button type="submit" onSubmit={handleSubmit} className="bg-white text-black">
-            Generate Tweets
+        <Button type="submit" disabled={loading} onSubmit={handleSubmit} onClick={()=> setOpen(true)} className="bg-white text-black">
+          {loading? "Generating..." : "Generate Posts"}
         </Button>
 
       </form>

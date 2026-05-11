@@ -1,83 +1,83 @@
-import anglePrompt from "./prompts/generate-angle.ts";
-import createPostPrompt from "./prompts/write-tweets.ts";
+import anglePrompt from "./prompts/generate-angle.ts"
+import createPostPrompt from "./prompts/write-tweets.ts"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods":
+    "POST, OPTIONS",
 };
 
-Deno.serve(async (req) => {
-  console.log("Function started");
+Deno.serve(async(req)=>{
 
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  return new Response("ok", {
+    headers: corsHeaders,
+  });
+}
+
+  const body = await req.json();
+  const {product, icp, painPoints, tone}=body
+
+  const anglePromptText = anglePrompt({product,icp,painPoints});
+
+  const angleResponse = await fetch("https://api.groq.com/openai/v1/chat/completions",{
+    method:"POST",
+    headers:{
+      ...corsHeaders,
+      "Content-Type":"application/json",
+      Authorization:`Bearer ${Deno.env.get("GROQ_API_KEY")}`,
+    },
+    body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages:[
+        {
+          role:"user",
+          content: anglePromptText,
+        },
+        ],
+        temperature: 0.8,
+      })
   }
+  );
 
-  try {
-    const { product, icp, pain_points, tone } = await req.json();
+  const angleData = await angleResponse.json()
 
-    // Step 1: Generate angles using Groq
-    const anglePromptText = anglePrompt({ product, icp, painPoints: pain_points });
-    const angleResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${Deno.env.get("GROQ_API_KEY")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "mixtral-8x7b-32768",
-        messages: [{ role: "user", content: anglePromptText }],
-        max_tokens: 500,
-      }),
-    });
+  const angles = angleData.choices[0].message.content
 
-    if (!angleResponse.ok) {
-      throw new Error(`Groq API error for angles: ${angleResponse.statusText}`);
-    }
+  const generateTweets = createPostPrompt({angles,tone})
 
-    const angleData = await angleResponse.json();
-    const angles = angleData.choices[0].message.content.trim();
-
-    console.log("Generated angles:", angles);
-
-    // Step 2: Generate tweets using angles and tone
-    const tweetPromptText = createPostPrompt({ angles, tone });
-    const tweetResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${Deno.env.get("GROQ_API_KEY")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "mixtral-8x7b-32768",
-        messages: [{ role: "user", content: tweetPromptText }],
-        max_tokens: 1000,
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!tweetResponse.ok) {
-      throw new Error(`Groq API error for tweets: ${tweetResponse.statusText}`);
-    }
-
-    const tweetData = await tweetResponse.json();
-    const tweetsJson = tweetData.choices[0].message.content.trim();
-
-    console.log("Raw tweets response:", tweetsJson);
-
-    // Parse the JSON response
-    const responseObj = JSON.parse(tweetsJson);
-    const tweets = responseObj.tweets;
-
-    return new Response(JSON.stringify({ tweets }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  const tweetsResponse = await fetch("https://api.groq.com/openai/v1/chat/completions",{
+    method:"POST",
+    headers:{
+      ...corsHeaders,
+      "Content-Type":"application/json",
+      Authorization:`Bearer ${Deno.env.get("GROQ_API_KEY")}`,
+    },
+    body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages:[
+        {
+          role:"user",
+          content: generateTweets,
+        },
+        ],
+        temperature: 0.8,
+      })
   }
-});
+  );
+
+  const tweetData = await tweetsResponse.json();
+
+  const tweets = tweetData.choices[0].message.content
+
+  return new Response(JSON.stringify({tweets}),
+    {
+      headers: {
+        ...corsHeaders,
+        "Content-Type":"application/json",
+      }
+    }
+  )
+})

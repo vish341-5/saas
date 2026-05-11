@@ -1,22 +1,64 @@
-// utils/prompts/anglePrompt.js
-
-export default function anglePrompt({ product, icp, painPoints }) {
+export default function anglePrompt({
+  product,
+  icp,
+  painPoints,
+}) {
   return `
-You are analyzing SaaS founders and their audience.
+You deeply understand how SaaS founders think, complain, and post online.
 
-INPUT:
-Product: ${product}
-ICP: ${icp}
-Pain Points: ${painPoints}
+PRODUCT:
+${product}
+
+ICP:
+${icp}
+
+PAIN POINTS:
+${painPoints}
 
 TASK:
-Generate 6 sharp content angles.
+Generate 6 highly specific Twitter content angles.
 
-Each angle must:
-- Highlight a real frustration
-- Include emotional trigger (frustration, anger, ambition)
-- Be specific, not generic
+The angles should:
+- expose painful truths
+- challenge common beliefs
+- feel emotionally real
+- sound like founder observations
+- include frustration, tension, ambition, fear, or ego
+- feel naturally tweetable
+- target the ICP directly
 
-Return ONLY a list of angles.
+GOOD ANGLES:
+- specific founder frustrations
+- controversial observations
+- emotional business pain
+- hard truths
+- hidden costs
+- behavior patterns
+- strong opinions
+
+BAD ANGLES:
+- generic startup advice
+- motivational fluff
+- productivity clichés
+- broad statements
+- corporate language
+- vague inspiration
+
+STYLE:
+- sharp
+- opinionated
+- human
+- emotionally charged
+- realistic
+- internet-native
+
+IMPORTANT:
+- No hashtags
+- No numbering
+- No explanations
+- No introductions
+- No bullet points
+
+Return ONLY the raw angles.
 `;
 }

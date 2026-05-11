@@ -23,6 +23,8 @@ RULES:
 - Avoid generic advice
 - No corporate language
 
+
+
 VARIATION:
 - 2 aggressive tweets
 - 1 funny
@@ -30,10 +32,12 @@ VARIATION:
 - 2 emotional
 
 OUTPUT:
-Return a JSON object with a "tweets" key containing an array of 6 tweet strings.
-
-Example:
-{"tweets": ["Tweet 1 text here", "Tweet 2 text here", "Tweet 3 text here", "Tweet 4 text here", "Tweet 5 text here", "Tweet 6 text here"]}
+return only valid json like:
+[
+"tweet 1",
+"tweet 2",
+...
+]
 
 `;
 }
